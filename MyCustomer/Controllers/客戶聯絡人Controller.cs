@@ -13,12 +13,13 @@ namespace MyCustomer.Controllers
 {
     public class 客戶聯絡人Controller : Controller
     {
-        private CustomerEntities db = new CustomerEntities();
+        客戶聯絡人Repository contactrepo = RepositoryHelper.Get客戶聯絡人Repository();
+        客戶資料Repository custrepo = RepositoryHelper.Get客戶資料Repository();
 
         // GET: 客戶聯絡人
         public ActionResult Index()
         {
-            var 客戶聯絡人 = db.客戶聯絡人.Include(客 => 客.客戶資料);
+            var 客戶聯絡人 = contactrepo.GetContactAllData();
             var contactview = new ContactViewModel();
             contactview.contact = 客戶聯絡人.Where(p => p.IsDeleted == false);
             return View(contactview);
@@ -29,7 +30,7 @@ namespace MyCustomer.Controllers
         {
             if (ModelState.IsValid)
             {
-                var query = db.客戶聯絡人.AsQueryable();
+                var query = contactrepo.All().AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(model.contactsearch.Name))
                 {
@@ -53,7 +54,7 @@ namespace MyCustomer.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            var 客戶聯絡人 = contactrepo.GetSingleDataByContactId(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
@@ -64,7 +65,7 @@ namespace MyCustomer.Controllers
         // GET: 客戶聯絡人/Create
         public ActionResult Create()
         {
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱");
+            ViewBag.客戶Id = new SelectList(custrepo.All(), "Id", "客戶名稱");
             return View();
         }
 
@@ -77,12 +78,12 @@ namespace MyCustomer.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.客戶聯絡人.Add(客戶聯絡人);
-                db.SaveChanges();
+                contactrepo.Add(客戶聯絡人);
+                contactrepo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
 
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(custrepo.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -93,12 +94,12 @@ namespace MyCustomer.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            var 客戶聯絡人 = contactrepo.GetSingleDataByContactId(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(custrepo.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -111,11 +112,11 @@ namespace MyCustomer.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(客戶聯絡人).State = EntityState.Modified;
-                db.SaveChanges();
+                contactrepo.Update(客戶聯絡人);
+                contactrepo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(custrepo.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -126,7 +127,7 @@ namespace MyCustomer.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            var 客戶聯絡人 = contactrepo.GetSingleDataByContactId(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
@@ -139,20 +140,10 @@ namespace MyCustomer.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
-            //db.客戶聯絡人.Remove(客戶聯絡人);
+            var 客戶聯絡人 = contactrepo.GetSingleDataByContactId(id);
             客戶聯絡人.IsDeleted = true;
-            db.SaveChanges();
+            contactrepo.UnitOfWork.Commit();
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

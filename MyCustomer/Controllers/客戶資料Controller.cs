@@ -13,12 +13,12 @@ namespace MyCustomer.Controllers
 {
     public class 客戶資料Controller : Controller
     {
-        private CustomerEntities db = new CustomerEntities();
+        客戶資料Repository custrepo = RepositoryHelper.Get客戶資料Repository();
 
         // GET: 客戶資料
         public ActionResult Index()
         {
-            var custdata = db.客戶資料;
+            var custdata = custrepo.All();
             var custview = new CustomerViewModel();
             custview.customer = custdata.Where(p => p.IsDeleted == false);
             return View(custview);
@@ -29,7 +29,7 @@ namespace MyCustomer.Controllers
         {
             if (ModelState.IsValid)
             {
-                var query = db.客戶資料.AsQueryable();
+                var query = custrepo.All().AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(model.customersearch.CustomerName))
                 {
@@ -53,7 +53,7 @@ namespace MyCustomer.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
+            var 客戶資料 = custrepo.GetSingleDataByCustomerId(id.Value);
             if (客戶資料 == null)
             {
                 return HttpNotFound();
@@ -76,8 +76,8 @@ namespace MyCustomer.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.客戶資料.Add(客戶資料);
-                db.SaveChanges();
+                custrepo.Add(客戶資料);
+                custrepo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
 
@@ -91,7 +91,7 @@ namespace MyCustomer.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
+            var 客戶資料 = custrepo.GetSingleDataByCustomerId(id.Value);
             if (客戶資料 == null)
             {
                 return HttpNotFound();
@@ -108,8 +108,8 @@ namespace MyCustomer.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(客戶資料).State = EntityState.Modified;
-                db.SaveChanges();
+                custrepo.Update(客戶資料);
+                custrepo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
             return View(客戶資料);
@@ -122,7 +122,7 @@ namespace MyCustomer.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
+            var 客戶資料 = custrepo.GetSingleDataByCustomerId(id.Value);
             if (客戶資料 == null)
             {
                 return HttpNotFound();
@@ -135,27 +135,18 @@ namespace MyCustomer.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            客戶資料 客戶資料 = db.客戶資料.Find(id);
+            var 客戶資料 = custrepo.GetSingleDataByCustomerId(id);
             客戶資料.IsDeleted = true;
-            //db.客戶資料.Remove(客戶資料);
-            db.SaveChanges();
+            custrepo.UnitOfWork.Commit();
             return RedirectToAction("Index");
         }
 
         public ActionResult CustomerList()
         {
-            var query = db.CUSTOMERLIST.AsQueryable();
+            var custview = RepositoryHelper.GetCUSTOMERLISTRepository();
+            var query = custview.All().AsQueryable();
 
             return View(query.ToList());
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }
